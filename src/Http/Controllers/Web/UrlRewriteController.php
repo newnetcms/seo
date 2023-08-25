@@ -7,6 +7,7 @@ use Exception;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Newnet\Seo\Models\PreRedirect;
 use Newnet\Seo\Models\Url;
 use Newnet\Seo\Repositories\ErrorRedirectRepositoryInterface;
 use Newnet\Seo\Repositories\UrlRepositoryInterface;
@@ -97,5 +98,19 @@ class UrlRewriteController extends Controller
         }
 
         return $urlRewrite->target_path;
+    }
+
+    public function checkPreRedirect($targetPath) {
+        $preRedirect = PreRedirect::where('from_path', ltrim($targetPath, '/'))->first();
+        if ($preRedirect) {
+            return response()->json([
+                'success' => true,
+                'url' => $preRedirect->to_url,
+                'status_code' => $preRedirect->status_code,
+            ]);
+        }
+        return response()->json([
+            'success' => false,
+        ]);
     }
 }

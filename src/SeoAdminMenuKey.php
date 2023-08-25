@@ -1,6 +1,6 @@
 <?php
 
-namespace Newnet\Seo\Enums;
+namespace Newnet\Seo;
 
 class SeoAdminMenuKey
 {

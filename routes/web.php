@@ -15,3 +15,4 @@ Route::prefix(LaravelLocalization::setLocale())
     });
 
 Route::get('sitemap.xml', SitemapController::class);
+Route::get('seo/pre-redirect/{url}', [UrlRewriteController::class, 'checkPreRedirect']);

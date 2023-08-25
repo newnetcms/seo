@@ -1,6 +1,6 @@
 <?php
 
-use Newnet\Seo\Enums\SeoAdminMenuKey;
+use Newnet\Seo\SeoAdminMenuKey;
 use Newnet\Setting\SettingAdminMenuKey;
 
 AdminMenu::addItem(__('seo::module.module_name'), [
