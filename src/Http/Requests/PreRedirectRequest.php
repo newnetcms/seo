@@ -24,7 +24,7 @@ class PreRedirectRequest extends FormRequest
     public function rules()
     {
         return [
-            'from_path' => 'required|unique:seo__pre_redirects,from_path,'.$this->route('id'),
+            'from_path' => 'required|unique:seo__pre_redirects,from_path,'.$this->route('pre-redirect'),
             'to_url'    => 'required',
         ];
     }
