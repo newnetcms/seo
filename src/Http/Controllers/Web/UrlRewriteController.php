@@ -70,9 +70,9 @@ class UrlRewriteController extends Controller
 
     protected function homePage()
     {
-        $homeUrl = setting('seo_home_url');
-        if ($homeUrl) {
-            return $this->handleRealRoute($homeUrl);
+        $homePage = Url::where('request_path', '/')->first();
+        if ($homePage) {
+            return $this->handleRealRoute($homePage->target_path);
         }
 
         if (view()->exists('index')) {
