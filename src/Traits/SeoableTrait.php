@@ -2,9 +2,10 @@
 
 namespace Newnet\Seo\Traits;
 
-use App;
+use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
-use LaravelLocalization;
+use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
 use Newnet\Seo\Models\Meta;
 use Newnet\Seo\Models\Url;
 
@@ -98,18 +99,15 @@ trait SeoableTrait
     public function getUrlAttribute()
     {
         if (method_exists($this, 'getUrl')) {
-            $targetPath = ltrim(parse_url($this->getUrl(), PHP_URL_PATH), '/');
-
-            $seourls = $this->getSeoUrls($targetPath);
-
-            $seourl = $seourls->where('locale', App::getLocale())->first();
-            if (!$seourl) {
-                $seourl = $seourls->first();
+            if (config('cms.seo.enable_cache_url')) {
+                $locale = App::getLocale();
+                $cache_key = 'url_'.$locale.'_'.get_class($this).'_'.$this->id;
+                return Cache::driver(config('cms.seo.cache_driver'))->rememberForever($cache_key, function () {
+                    return $this->generateUrl();
+                });
+            } else {
+                return $this->generateUrl();
             }
-
-            $seoUrl = object_get($seourl, 'request_path', $targetPath);
-
-            return LaravelLocalization::localizeURL($seoUrl);
         }
 
         return LaravelLocalization::localizeURL($this->slug);
@@ -118,6 +116,24 @@ trait SeoableTrait
     public function setUrlAttribute($value)
     {
         $this->seoableAttributes['seourl']['request_path'] = $value;
+    }
+
+    protected function generateUrl()
+    {
+        $locale = App::getLocale();
+
+        $targetPath = ltrim(parse_url($this->getUrl(), PHP_URL_PATH), '/');
+
+        $seourls = $this->getSeoUrls($targetPath);
+
+        $seourl = $seourls->where('locale', $locale)->first();
+        if (!$seourl) {
+            $seourl = $seourls->first();
+        }
+
+        $seoUrl = object_get($seourl, 'request_path', $targetPath);
+
+        return LaravelLocalization::localizeURL($seoUrl);
     }
 
     protected function getSeoUrls(string $targetPath)
