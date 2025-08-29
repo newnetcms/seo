@@ -10,5 +10,5 @@ class SeoAdminMenuKey
 
     const ERROR_REDIRECT = 'seo_error_redirect';
 
-    const SETTING = 'setting';
+    const SETTING = 'seo_setting';
 }
