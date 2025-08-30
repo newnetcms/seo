@@ -3,6 +3,7 @@
 namespace Newnet\Seo\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * Newnet\Seo\Models\PreRedirect
@@ -38,18 +39,23 @@ class PreRedirect extends Model
         'status_code' => 'int',
     ];
 
+    protected static function booted()
+    {
+        static::created(function () {
+            Cache::forget('active_pre_redirects');
+        });
+
+        static::updated(function () {
+            Cache::forget('active_pre_redirects');
+        });
+
+        static::deleted(function () {
+            Cache::forget('active_pre_redirects');
+        });
+    }
+
     public function getStatusCodeAttribute($value)
     {
         return $value ?: 302;
-    }
-
-    public function setFromPathAttribute($value)
-    {
-        $path = parse_url($value, PHP_URL_PATH);
-        $query = parse_url($value, PHP_URL_QUERY);
-
-        $value = $query ? $path.'?'.$query : $path;
-
-        $this->attributes['from_path'] = trim($value, '/');
     }
 }

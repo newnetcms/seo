@@ -6,8 +6,6 @@ use Newnet\Seo\Http\Controllers\Web\UrlRewriteController;
 Route::prefix(LaravelLocalization::setLocale())
     ->middleware([
         'localizationRedirect',
-        'seo.friendly',
-        'seo.preredirect',
     ])
     ->group(function () {
         Route::get('/', UrlRewriteController::class);
@@ -15,4 +13,3 @@ Route::prefix(LaravelLocalization::setLocale())
     });
 
 Route::get('sitemap.xml', SitemapController::class);
-Route::get('seo/pre-redirect/{url}', [UrlRewriteController::class, 'checkPreRedirect']);

@@ -5,6 +5,7 @@ namespace Newnet\Seo;
 use Blade;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\View;
+use Newnet\Seo\Http\Middleware\InternalAccessMiddleware;
 use Newnet\Seo\Http\Middleware\PreRedirectMiddleware;
 use Newnet\Seo\Models\ErrorRedirect;
 use Newnet\Seo\Models\PreRedirect;
@@ -27,8 +28,6 @@ class SeoServiceProvider extends BaseModuleServiceProvider
     {
         parent::register();
 
-        $this->registerRouter();
-
         $this->app->singleton(MetaRepositoryInterface::class, function () {
             return new MetaRepository(new Meta());
         });
@@ -50,6 +49,8 @@ class SeoServiceProvider extends BaseModuleServiceProvider
     {
         parent::boot();
 
+        $this->registerRouter();
+
         Blade::include('seo::admin.field', 'seo');
         Blade::include('seo::meta', 'seometa');
     }
@@ -58,7 +59,9 @@ class SeoServiceProvider extends BaseModuleServiceProvider
     {
         /** @var Router $router */
         $router = $this->app['router'];
-        $router->aliasMiddleware('seo.friendly', SeoFriendlyUrlRewriteMiddleware::class);
-        $router->aliasMiddleware('seo.preredirect', PreRedirectMiddleware::class);
+        $router->aliasMiddleware('seo.internal.access', InternalAccessMiddleware::class);
+//        $router->aliasMiddleware('seo.friendly', SeoFriendlyUrlRewriteMiddleware::class);
+//        $router->aliasMiddleware('seo.preredirect', PreRedirectMiddleware::class);
+        $router->pushMiddlewareToGroup('web', PreRedirectMiddleware::class);
     }
 }

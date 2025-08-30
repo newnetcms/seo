@@ -4,6 +4,7 @@ namespace Newnet\Seo\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Newnet\Seo\Models\PreRedirect;
 
 class PreRedirectMiddleware
@@ -14,14 +15,28 @@ class PreRedirectMiddleware
             return $next($request);
         }
 
-        if ($request->input('skip') == 'rewrite' || $request->is(config('core.admin_prefix').'*')) {
+        if ($request->is(config('core.admin_prefix').'*')) {
             return $next($request);
         }
 
-        $targetPath = ltrim($request->getRequestUri(), '/');
+        $currentUrl = $request->url();
+        $currentPath = $request->path();
 
-        if ($preRedirect = PreRedirect::where('from_path', $targetPath)->first()) {
-            return redirect($preRedirect->to_url, $preRedirect->status_code);
+        // Cache redirects để tăng performance
+        $redirects = Cache::remember('active_pre_redirects', 3600, function () {
+            return PreRedirect::get();
+        });
+
+        foreach ($redirects as $redirect) {
+            // So sánh exact URL
+            if (rtrim($currentUrl, '/') === rtrim($redirect->from_path, '/')) {
+                return redirect($redirect->to_url, $redirect->status_code);
+            }
+
+            // So sánh path (không bao gồm domain)
+            if ('/' . $currentPath === $redirect->from_path || $currentPath === trim($redirect->from_path, '/')) {
+                return redirect($redirect->to_url, $redirect->status_code);
+            }
         }
 
         return $next($request);

@@ -3,15 +3,13 @@
 namespace Newnet\Seo\Http\Controllers\Web;
 
 use App;
-use Exception;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use Newnet\Seo\Models\PreRedirect;
+use Illuminate\Support\Facades\Cache;
+use Newnet\Seo\Models\ErrorRedirect;
 use Newnet\Seo\Models\Url;
-use Newnet\Seo\Repositories\ErrorRedirectRepositoryInterface;
 use Newnet\Seo\Repositories\UrlRepositoryInterface;
-use Route;
 
 class UrlRewriteController extends Controller
 {
@@ -20,61 +18,52 @@ class UrlRewriteController extends Controller
      */
     protected $urlRepository;
 
-    /**
-     * @var ErrorRedirectRepositoryInterface
-     */
-    protected $errorRedirectRepository;
+    const IS_HOMEPAGE = '_IS_HOMEPAGE_';
 
-    public function __construct(UrlRepositoryInterface $urlRepository, ErrorRedirectRepositoryInterface $errorRedirectRepository)
+    const IS_NOT_FOUND = '_IS_NOT_FOUND_';
+
+    public function __construct(UrlRepositoryInterface $urlRepository)
     {
         $this->urlRepository = $urlRepository;
-        $this->errorRedirectRepository = $errorRedirectRepository;
     }
 
     public function __invoke(Request $request, $path = '')
     {
         $path = ltrim(rtrim($path, '/'), '/') ?: '/';
 
-        if ($path == '/' && ($homePage = $this->homePage())) {
-            return $homePage;
+        $targetPath = $this->getTargetPath($path);
+        if ($targetPath == self::IS_HOMEPAGE) {
+            return $this->renderHomePage();
         }
 
-        try {
-            $targetPath = $this->getTargetPath($path);
-
-            return $this->handleRealRoute($targetPath);
-        } catch (Exception $e) {
-
+        if ($targetPath == self::IS_NOT_FOUND) {
+            return $this->redirectError($request);
         }
 
-        try {
-            $url = ltrim($request->getRequestUri(), '/');
-
-            $errorRedirect = $this->errorRedirectRepository->findBy('from_path', $url);
-
-            return redirect($errorRedirect->to_url, $errorRedirect->status_code);
-        } catch (Exception $e) {
-
-        }
-
-        return abort(404);
+        return $this->handleRealRoute($targetPath, $request);
     }
 
-    protected function handleRealRoute($targetPath)
+    protected function handleRealRoute($targetPath, $request)
     {
-        $params = request()->input();
-        $params['skip'] = 'rewrite';
+        $forwardRequest = Request::create(
+            $targetPath,
+            $request->method(),
+            $request->all(),
+            $request->cookies->all(),
+            $request->allFiles(),
+            $request->server->all(),
+            $request->getContent()
+        );
 
-        return Route::dispatchToRoute(Request::create($targetPath, 'GET', $params, $_COOKIE));
+        $forwardRequest->headers->replace($request->headers->all());
+        $forwardRequest->attributes->set('_original_url', $request->fullUrl());
+        $forwardRequest->attributes->set('_internal_forward', true);
+
+        return app()->handle($forwardRequest);
     }
 
-    protected function homePage()
+    protected function renderHomePage()
     {
-        $homePage = Url::where('request_path', '/')->first();
-        if ($homePage) {
-            return $this->handleRealRoute($homePage->target_path);
-        }
-
         if (view()->exists('index')) {
             return view('seo::web.index');
         }
@@ -93,24 +82,39 @@ class UrlRewriteController extends Controller
             $urlRewrite = $matchRequestPath->first();
         }
 
+        if (!$urlRewrite && $path == '/') {
+            return self::IS_HOMEPAGE;
+        }
+
         if (!$urlRewrite) {
-            throw new ModelNotFoundException();
+            return self::IS_NOT_FOUND;
         }
 
         return $urlRewrite->target_path;
     }
 
-    public function checkPreRedirect($targetPath) {
-        $preRedirect = PreRedirect::where('from_path', ltrim($targetPath, '/'))->first();
-        if ($preRedirect) {
-            return response()->json([
-                'success' => true,
-                'url' => $preRedirect->to_url,
-                'status_code' => $preRedirect->status_code,
-            ]);
+    protected function redirectError(Request $request)
+    {
+        $currentUrl = $request->url();
+        $currentPath = $request->path();
+
+        // Cache redirects để tăng performance
+        $redirects = Cache::remember('active_error_redirects', 3600, function () {
+            return ErrorRedirect::get();
+        });
+
+        foreach ($redirects as $redirect) {
+            // So sánh exact URL
+            if (rtrim($currentUrl, '/') === rtrim($redirect->from_path, '/')) {
+                return redirect($redirect->to_url, $redirect->status_code);
+            }
+
+            // So sánh path (không bao gồm domain)
+            if ('/' . $currentPath === $redirect->from_path || $currentPath === trim($redirect->from_path, '/')) {
+                return redirect($redirect->to_url, $redirect->status_code);
+            }
         }
-        return response()->json([
-            'success' => false,
-        ]);
+
+        throw new ModelNotFoundException();
     }
 }

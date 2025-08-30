@@ -24,7 +24,7 @@ class ErrorRedirectRequest extends FormRequest
     public function rules()
     {
         return [
-            'from_path' => 'required|unique:seo__error_redirects,from_path,'.$this->route('error-redirect'),
+            'from_path' => 'required|unique:seo__error_redirects,from_path,'.$this->route('error_redirect'),
             'to_url'    => 'required',
         ];
     }

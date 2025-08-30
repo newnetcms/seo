@@ -12,7 +12,7 @@ class SeoFriendlyUrlRewriteMiddleware
 {
     public function handle(Request $request, Closure $next)
     {
-        if ($request->input('skip') == 'rewrite' || $request->is(config('core.admin_prefix').'*')) {
+        if ($request->is(config('core.admin_prefix').'*')) {
             return $next($request);
         }
 
