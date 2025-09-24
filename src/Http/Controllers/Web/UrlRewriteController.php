@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Route;
 use Newnet\Seo\Models\ErrorRedirect;
 use Newnet\Seo\Models\Url;
 use Newnet\Seo\Repositories\UrlRepositoryInterface;
@@ -59,7 +60,7 @@ class UrlRewriteController extends Controller
         $forwardRequest->attributes->set('_original_url', $request->fullUrl());
         $forwardRequest->attributes->set('_internal_forward', true);
 
-        return app()->handle($forwardRequest);
+        return Route::dispatchToRoute($forwardRequest);
     }
 
     protected function renderHomePage()
