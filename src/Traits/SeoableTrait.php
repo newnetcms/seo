@@ -75,8 +75,10 @@ trait SeoableTrait
         if (isset($this->seoableAttributes['seourl'])) {
             $value = $this->seoableAttributes['seourl'];
 
+            $slug = get_safe_slug($this->name);
+
             $value['target_path'] = parse_url($this->getUrl(), PHP_URL_PATH);
-            $value['request_path'] = $value['request_path'] ?? Str::slug($this->name);
+            $value['request_path'] = $value['request_path'] ?? $slug;
 
             if ($this->seourl) {
                 $this->seourl->update($value);
