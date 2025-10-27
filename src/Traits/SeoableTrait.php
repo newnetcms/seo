@@ -4,7 +4,6 @@ namespace Newnet\Seo\Traits;
 
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Str;
 use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
 use Newnet\Seo\Models\Meta;
 use Newnet\Seo\Models\Url;
@@ -112,7 +111,7 @@ trait SeoableTrait
             }
         }
 
-        return LaravelLocalization::localizeURL($this->slug);
+        return $this->slug ? LaravelLocalization::localizeURL($this->slug) : null;
     }
 
     public function setUrlAttribute($value)
@@ -133,9 +132,9 @@ trait SeoableTrait
             $seourl = $seourls->first();
         }
 
-        $seoUrl = object_get($seourl, 'request_path', $targetPath);
+        $seoUrl = object_get($seourl, 'request_path');
 
-        return LaravelLocalization::localizeURL($seoUrl);
+        return $seoUrl ? LaravelLocalization::localizeURL($seoUrl) : null;
     }
 
     protected function getSeoUrls(string $targetPath)
