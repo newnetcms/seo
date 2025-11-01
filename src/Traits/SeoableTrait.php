@@ -123,18 +123,24 @@ trait SeoableTrait
     {
         $locale = App::getLocale();
 
-        $targetPath = ltrim(parse_url($this->getUrl(), PHP_URL_PATH), '/');
+        $targetPath = ltrim(parse_url($this->getUrl(), PHP_URL_PATH), '/') ?: '/';
 
-        $seourls = $this->getSeoUrls($targetPath);
+        if (config('cms.seo.enable_fallback_seo_url')) {
+            $seourls = $this->getSeoUrls($targetPath);
 
-        $seourl = $seourls->where('locale', $locale)->first();
-        if (!$seourl) {
-            $seourl = $seourls->first();
+            $seourl = $seourls->where('locale', $locale)->first();
+            if (!$seourl) {
+                $seourl = $seourls->first();
+            }
+
+            $seoUrl = object_get($seourl, 'request_path');
+
+            return $seoUrl ? LaravelLocalization::localizeURL($seoUrl) : null;
+        } else {
+            $seoUrl = $this->seourl ? $this->seourl->request_path : null;
+
+            return $seoUrl ? LaravelLocalization::localizeURL($seoUrl) : null;
         }
-
-        $seoUrl = object_get($seourl, 'request_path');
-
-        return $seoUrl ? LaravelLocalization::localizeURL($seoUrl) : null;
     }
 
     protected function getSeoUrls(string $targetPath)

@@ -12,5 +12,8 @@ return [
     'enable_pre_redirect' => env('SEO_ENABLE_PRE_REDIRECT', false),
 
     'enable_cache_url' => env('SEO_ENABLE_CACHE_URL', false),
+
     'cache_driver' => env('SEO_CACHE_DRIVER'),
+
+    'enable_fallback_seo_url' => env('SEO_ENABLE_FALLBACK_SEO_URL', true),
 ];
