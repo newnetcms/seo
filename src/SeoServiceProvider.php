@@ -60,8 +60,8 @@ class SeoServiceProvider extends BaseModuleServiceProvider
         /** @var Router $router */
         $router = $this->app['router'];
         $router->aliasMiddleware('seo.internal.access', InternalAccessMiddleware::class);
-//        $router->aliasMiddleware('seo.friendly', SeoFriendlyUrlRewriteMiddleware::class);
-//        $router->aliasMiddleware('seo.preredirect', PreRedirectMiddleware::class);
+        $router->aliasMiddleware('seo.friendly', SeoFriendlyUrlRewriteMiddleware::class);
+        $router->aliasMiddleware('seo.preredirect', PreRedirectMiddleware::class);
         $router->pushMiddlewareToGroup('web', PreRedirectMiddleware::class);
     }
 }
