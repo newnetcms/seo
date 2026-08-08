@@ -16,6 +16,12 @@
 @stop
 
 @section('content')
+    @php
+        // Fallback chains mirror seo::meta (web/lib/seo/resources/views/meta.blade.php)
+        // and the <title> tag default in the theme's master.blade.php.
+        $seoTitleFallback = setting('site_title') ?: config('app.name');
+    @endphp
+
     <form action="{{ route('setting.admin.setting.save') }}" method="POST" enctype="multipart/form-data">
         @csrf
 
@@ -70,7 +76,7 @@
                                                 <div class="cms-seo-preview-link">{{ url('/') }}</div>
                                             </div>
                                         </div>
-                                        <div class="cms-seo-preview-title" data-seo-text="#seo_meta_title" data-placeholder="{{ __('seo::setting.preview.title_placeholder') }}"></div>
+                                        <div class="cms-seo-preview-title" data-seo-text="#seo_meta_title" data-seo-static-fallback="{{ $seoTitleFallback }}" data-placeholder="{{ __('seo::setting.preview.title_placeholder') }}"></div>
                                         <div class="cms-seo-preview-desc" data-seo-text="#seo_meta_description" data-placeholder="{{ __('seo::setting.preview.description_placeholder') }}"></div>
                                     </div>
                                 </div>
@@ -113,8 +119,8 @@
                                         </div>
                                         <div class="cms-og-preview-body">
                                             <div class="cms-og-preview-meta">{{ parse_url(url('/'), PHP_URL_HOST) }}</div>
-                                            <div class="cms-og-preview-title" data-seo-text="#seo_meta_og_title" data-placeholder="{{ __('seo::setting.preview.title_placeholder') }}"></div>
-                                            <div class="cms-og-preview-desc" data-seo-text="#seo_meta_og_description" data-placeholder="{{ __('seo::setting.preview.description_placeholder') }}"></div>
+                                            <div class="cms-og-preview-title" data-seo-text="#seo_meta_og_title" data-seo-text-fallback="#seo_meta_title" data-placeholder="{{ __('seo::setting.preview.title_placeholder') }}"></div>
+                                            <div class="cms-og-preview-desc" data-seo-text="#seo_meta_og_description" data-seo-text-fallback="#seo_meta_description" data-placeholder="{{ __('seo::setting.preview.description_placeholder') }}"></div>
                                         </div>
                                     </div>
                                 </div>
@@ -156,8 +162,8 @@
                                             <span class="cms-preview-image-placeholder"><i class="fas fa-image"></i> {{ __('seo::setting.preview.no_image') }}</span>
                                         </div>
                                         <div class="cms-twitter-preview-body">
-                                            <div class="cms-twitter-preview-title" data-seo-text="#seo_meta_twitter_title" data-placeholder="{{ __('seo::setting.preview.title_placeholder') }}"></div>
-                                            <div class="cms-twitter-preview-desc" data-seo-text="#seo_meta_twitter_description" data-placeholder="{{ __('seo::setting.preview.description_placeholder') }}"></div>
+                                            <div class="cms-twitter-preview-title" data-seo-text="#seo_meta_twitter_title" data-seo-text-fallback="#seo_meta_title" data-placeholder="{{ __('seo::setting.preview.title_placeholder') }}"></div>
+                                            <div class="cms-twitter-preview-desc" data-seo-text="#seo_meta_twitter_description" data-seo-text-fallback="#seo_meta_description" data-placeholder="{{ __('seo::setting.preview.description_placeholder') }}"></div>
                                             <div class="cms-twitter-preview-meta">
                                                 <svg viewBox="0 0 24 24">
                                                     <path d="M11.96 14.945a.833.833 0 01-.203-.027 5.192 5.192 0 01-2.795-1.932c-.832-1.125-1.176-2.508-.968-3.893s.942-2.605 2.068-3.438l3.53-2.608a5.25 5.25 0 017.33 1.1c.83 1.127 1.175 2.51.967 3.895s-.943 2.605-2.07 3.438l-1.48 1.094a.752.752 0 01-.892-1.208l1.48-1.095a3.713 3.713 0 001.476-2.45 3.724 3.724 0 00-.69-2.778 3.745 3.745 0 00-5.23-.784l-3.53 2.608a3.72 3.72 0 00-1.475 2.45c-.15.99.097 1.975.69 2.778a3.701 3.701 0 001.992 1.377.752.752 0 01-.202 1.475z" fill="#536471"></path>
