@@ -79,11 +79,25 @@ trait SeoableTrait
             $value['target_path'] = parse_url($this->getUrl(), PHP_URL_PATH);
             $value['request_path'] = $value['request_path'] ?? $slug;
 
-            if ($this->seourl) {
-                $this->seourl->update($value);
-            } else {
-                $this->seourl()->create($value);
-            }
+            // `seourl` is a morphOne - Eloquent lazy-loads and CACHES it on
+            // first access. The very first time this runs (right inside the
+            // `saved` event of the model's OWN first insert), no Url row
+            // exists yet, so the check below caches `null`. That cache is
+            // never invalidated, so a caller that saves the SAME model
+            // instance again later in the same request (e.g. this module's
+            // AI-content pipeline: DraftContentWriter::createDraft() saves
+            // once, then PreviewDraftPublisher::publish() saves the same
+            // object again via applyFields()) always saw a falsy `$this->
+            // seourl`, took the create() branch again, and produced a
+            // duplicate seo__urls row every single time. setRelation() here
+            // pushes the row we just wrote onto that cache so a subsequent
+            // save on this same instance correctly finds it and updates
+            // instead of re-creating.
+            $seourl = $this->seourl
+                ? tap($this->seourl)->update($value)
+                : $this->seourl()->create($value);
+
+            $this->setRelation('seourl', $seourl);
         }
     }
 
